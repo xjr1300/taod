@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  db:
+    # コンテナ名
+    container_name: taod-db
+    # ビルド
+    build:
+      context: ./containers/postgis
+      dockerfile: Dockerfile
+    # ポート番号を設定
+    ports:
+      - 5432:5432
+    # 環境変数ファイルを指定
+    env_file:
+      - .env
+    # ヘルスチェック
+    healthcheck:
+      # コンテナ内で実行するコマンド
+      test: psql -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c '\q'
+      # ヘルスチェックの間隔
+      interval: 10s
+      # ヘルスチェックのタイムアウト
+      timeout: 5s
+      # ヘルスチェックのリトライ回数
+      retries: 5
