@@ -29,3 +29,9 @@
 ```sh
 docker-compose up -d
 ```
+
+### マイグレーションの実行
+
+```sh
+sqlx migrate run
+```
