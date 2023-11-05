@@ -606,27 +606,29 @@ CREATE TABLE accidents (
     FOREIGN KEY (driving_practice_b_code) REFERENCES driving_practices(code)
 );
 
--- 補充票テーブル
-CREATE TABLE accident_subs (
-    -- 補充票ID
+-- 交通事故当事者以外関与者テーブル
+CREATE TABLE involved_persons (
+    -- 交通事故当事者以外関与者ID
     id UUID NOT NULL,
-    -- 本票ID
+    -- 交通事故ID
     accident_id UUID NOT NULL,
     -- 補充票番号
     sub_number INTEGER NOT NULL,
     -- 当事者種別コード
     party_code CHAR(2) NOT NULL,
-    -- 用途コード
+    -- 用途別コード
     purpose_code CHAR(2),
     -- 車両形状コード
     vehicle_type_code CHAR(2),
     -- 乗車別コード
     riding_type_code CHAR(1) NOT NULL,
+    -- 乗車等区分コード
+    riding_class_code CHAR(2) NOT NULL,
     -- サポカーコード
     support_car_code CHAR(2) NOT NULL,
-    -- エアバックの装備コード
+    -- エアバッグの装備コード
     airbag_code CHAR(1) NOT NULL,
-    -- サイドエアバックの装備コード
+    -- サイドエアバッグの装備コード
     side_airbag_code CHAR(1) NOT NULL,
     -- 人身損傷程度コード
     injury_code CHAR(1) NOT NULL,
@@ -636,7 +638,7 @@ CREATE TABLE accident_subs (
     vehicle_damage_code CHAR(1) NOT NULL,
     -- 主キー制約
     PRIMARY KEY (id),
-    -- 外部参照制約 本票
+    -- 外部参照制約 交通事故
     FOREIGN KEY (accident_id) REFERENCES accidents(id),
     -- 外部参照制約 当事者種別
     FOREIGN KEY (party_code) REFERENCES parties(code),
@@ -646,6 +648,8 @@ CREATE TABLE accident_subs (
     FOREIGN KEY (vehicle_type_code) REFERENCES vehicle_types(code),
     -- 外部参照制約 乗車別
     FOREIGN KEY (riding_type_code) REFERENCES riding_types(code),
+    -- 外部参照制約 乗車等区分
+    FOREIGN KEY (riding_class_code) REFERENCES riding_classes(code),
     -- 外部参照制約 サポカー
     FOREIGN KEY (support_car_code) REFERENCES support_cars(code),
     -- 外部参照制約 エアバッグの装備

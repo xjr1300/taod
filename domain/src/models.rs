@@ -155,6 +155,10 @@ pub struct RawInvolvedPerson {
     pub purpose_code: Option<String>,
     /// 車両形状等コード
     pub vehicle_type_code: Option<String>,
+    /// 乗車別コード
+    pub riding_type_code: String,
+    /// 乗車等区分コード
+    pub riding_class_code: String,
     /// サポカーコード
     pub support_car_code: String,
     /// エアバッグの装備コード
