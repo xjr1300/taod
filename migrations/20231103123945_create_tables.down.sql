@@ -1,5 +1,6 @@
 DROP TABLE involved_persons;
 DROP TABLE accidents;
+DROP TABLE riding_classes;
 DROP TABLE riding_types;
 DROP TABLE driving_practices;
 DROP TABLE holidays;
