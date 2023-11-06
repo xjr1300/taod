@@ -1,4 +1,4 @@
-DELETE FROM accident_subs;
+DELETE FROM involved_persons;
 DELETE FROM accidents;
 DELETE FROM riding_types;
 DELETE FROM driving_practices;

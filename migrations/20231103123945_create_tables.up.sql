@@ -633,9 +633,9 @@ CREATE TABLE involved_persons (
     -- 人身損傷程度コード
     injury_code CHAR(1) NOT NULL,
     -- 車両の衝突部位
-    collision_part CHAR(2) NOT NULL,
+    collision_part CHAR(2),
     -- 車両の損傷程度コード
-    vehicle_damage_code CHAR(1) NOT NULL,
+    vehicle_damage_code CHAR(1),
     -- 主キー制約
     PRIMARY KEY (id),
     -- 外部参照制約 交通事故
