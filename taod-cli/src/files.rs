@@ -18,6 +18,7 @@ pub struct RawAccidentIdentifier<'a> {
 }
 
 /// 交通事故事故
+#[derive(Debug, Clone)]
 pub struct RawAccident {
     /// 事故ID
     pub id: Uuid,
