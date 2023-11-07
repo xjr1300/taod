@@ -393,10 +393,13 @@ fn read_optional_str_column(
     row_index: usize,
     column_index: usize,
 ) -> anyhow::Result<Option<String>> {
-    let value = row.get(column_index).ok_or(anyhow::anyhow!(
-        "{}行目: 列番号が範囲外です。",
-        row_index + 1
-    ))?;
+    let value = row
+        .get(column_index)
+        .ok_or(anyhow::anyhow!(
+            "{}行目: 列番号が範囲外です。",
+            row_index + 1
+        ))?
+        .trim();
     match value.is_empty() {
         true => Ok(None),
         false => Ok(Some(value.to_string())),
@@ -585,8 +588,8 @@ mod tests {
         let row = row.split(",").collect::<Vec<&str>>();
         let row = csv::ByteRecord::from(row);
         let row = csv::StringRecord::from_byte_record(row).unwrap();
-        let cities = prefecture_hash_map_for_test();
-        let accident = row_to_accident(&row, 0, &cities).unwrap();
+        let prefectures = prefecture_hash_map_for_test();
+        let accident = row_to_accident(&row, 0, &prefectures).unwrap();
 
         assert_eq!(accident.prefecture_code, "10");
         assert_eq!(accident.police_station_code, "059");
@@ -658,5 +661,101 @@ mod tests {
         assert_eq!(accident.cognitive_days_b, 9999);
         assert_eq!(accident.driving_practice_a_code, "1");
         assert_eq!(accident.driving_practice_b_code, "1");
+    }
+
+    fn accident_identifiers_test(
+        accident_ids: &[Uuid],
+    ) -> HashMap<RawAccidentIdentifier<'static>, Uuid> {
+        let mut identifiers = HashMap::new();
+        identifiers.insert(
+            RawAccidentIdentifier {
+                prefecture_code: "10",
+                police_station_code: "101",
+                main_number: 42,
+            },
+            accident_ids[0],
+        );
+        identifiers.insert(
+            RawAccidentIdentifier {
+                prefecture_code: "10",
+                police_station_code: "101",
+                main_number: 1,
+            },
+            accident_ids[1],
+        );
+
+        identifiers
+    }
+
+    #[test]
+    fn row_to_involved_person_ok() {
+        let ids = [Uuid::new_v4(), Uuid::new_v4()];
+        let rows = [
+            "2,10,101,0042,001,14,31,11,1,07,00,2,2,2,23,3",
+            "2,10,101,0001,001,03,01,01,2,01,00,2,2,2,  ,",
+        ];
+        let identifiers = accident_identifiers_test(&ids);
+        let expected_persons = [
+            RawInvolvedPerson {
+                id: Uuid::new_v4(),
+                accident_id: ids[0],
+                sub_number: 1,
+                party_code: String::from("14"),
+                purpose_code: Some(String::from("31")),
+                vehicle_type_code: Some(String::from("11")),
+                riding_type_code: String::from("1"),
+                riding_class_code: String::from("07"),
+                support_car_code: String::from("00"),
+                airbag_code: String::from("2"),
+                side_airbag_code: String::from("2"),
+                injury_code: String::from("2"),
+                collision_part: Some(String::from("23")),
+                vehicle_damage_code: Some(String::from("3")),
+            },
+            RawInvolvedPerson {
+                id: Uuid::new_v4(),
+                accident_id: ids[1],
+                sub_number: 1,
+                party_code: String::from("03"),
+                purpose_code: Some(String::from("01")),
+                vehicle_type_code: Some(String::from("01")),
+                riding_type_code: String::from("2"),
+                riding_class_code: String::from("01"),
+                support_car_code: String::from("00"),
+                airbag_code: String::from("2"),
+                side_airbag_code: String::from("2"),
+                injury_code: String::from("2"),
+                collision_part: None,
+                vehicle_damage_code: None,
+            },
+        ];
+        for (row, expected) in rows.iter().zip(expected_persons.iter()) {
+            let row = row.split(",").collect::<Vec<&str>>();
+            let row = csv::ByteRecord::from(row);
+            let row = csv::StringRecord::from_byte_record(row).unwrap();
+            let involved_person = row_to_involved_person(&row, 0, &identifiers).unwrap();
+            assert_eq!(expected.accident_id, involved_person.accident_id);
+            assert_eq!(expected.sub_number, involved_person.sub_number);
+            assert_eq!(expected.party_code, involved_person.party_code);
+            assert_eq!(expected.purpose_code, involved_person.purpose_code);
+            assert_eq!(
+                expected.vehicle_type_code,
+                involved_person.vehicle_type_code
+            );
+            assert_eq!(expected.riding_type_code, involved_person.riding_type_code);
+            assert_eq!(
+                expected.riding_class_code,
+                involved_person.riding_class_code
+            );
+            assert_eq!(expected.support_car_code, involved_person.support_car_code);
+            assert_eq!(expected.airbag_code, involved_person.airbag_code);
+            assert_eq!(expected.side_airbag_code, involved_person.side_airbag_code);
+            assert_eq!(expected.injury_code, involved_person.injury_code);
+            assert_eq!(expected.collision_part, involved_person.collision_part);
+            assert_eq!(
+                expected.vehicle_damage_code,
+                involved_person.vehicle_damage_code
+            );
+        }
     }
 }
