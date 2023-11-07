@@ -5,7 +5,7 @@ use geozero::wkb;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres, Transaction};
 
-use crate::files::RawAccident;
+use crate::files::{RawAccident, RawInvolvedPerson};
 
 type GeometryF64 = Geometry<f64>;
 type PgTransaction<'a> = Transaction<'a, Postgres>;
@@ -55,14 +55,14 @@ pub async fn prefecture_hash_map(pool: &Pool<Postgres>) -> anyhow::Result<HashMa
 ///
 /// # 引数
 ///
-/// * `pool` - データベースコネクションプール
+/// * `tx` - データベーストランザクション
 /// * `accidents` - 交通事故を格納したベクタ
 ///
 /// # 戻り値
 ///
 /// `()`
 pub async fn register_accidents(
-    tx: &mut Transaction<'_, Postgres>,
+    tx: &mut PgTransaction<'_>,
     accidents: &[RawAccident],
 ) -> anyhow::Result<()> {
     for (index, accident) in accidents.iter().enumerate() {
@@ -81,8 +81,8 @@ pub async fn register_accidents(
     Ok(())
 }
 
-async fn insert_accident<'a>(
-    tx: &mut PgTransaction<'a>,
+async fn insert_accident(
+    tx: &mut PgTransaction<'_>,
     accident: &RawAccident,
     location: GeometryF64,
 ) -> anyhow::Result<()> {
@@ -277,6 +277,93 @@ async fn insert_accident<'a>(
         accident.cognitive_days_b,
         accident.driving_practice_a_code,
         accident.driving_practice_b_code,
+    )
+    .execute(&mut **tx)
+    .await?;
+
+    Ok(())
+}
+
+/// 交通事故当事者以外の関係者をデータベースに登録する。
+///
+/// # 引数
+///
+/// * `tx` - データベーストランザクション
+/// * `involved_persons` - 交通事故当事者以外の関係者を格納したベクタ
+///
+/// # 戻り値
+///
+/// `()`
+pub async fn register_involved_persons(
+    tx: &mut PgTransaction<'_>,
+    involved_persons: &[RawInvolvedPerson],
+) -> anyhow::Result<()> {
+    for (index, involved_person) in involved_persons.iter().enumerate() {
+        insert_involved_person(tx, involved_person).await.map_err(|e| {
+            anyhow::anyhow!(
+                "交通事故当事者以外の関係者をデータベースに登録する際に、INSERT文を実行できませんでした。{}: {:?}: {}データ目",
+                e,
+                involved_person,
+                index,
+            )
+        })?;
+    }
+
+    Ok(())
+}
+
+async fn insert_involved_person(
+    tx: &mut PgTransaction<'_>,
+    involved_person: &RawInvolvedPerson,
+) -> anyhow::Result<()> {
+    sqlx::query!(
+        r#"
+        INSERT INTO involved_persons (
+            id,
+            accident_id,
+            sub_number,
+            party_code,
+            purpose_code,
+            vehicle_type_code,
+            riding_type_code,
+            riding_class_code,
+            support_car_code,
+            airbag_code,
+            side_airbag_code,
+            injury_code,
+            collision_part,
+            vehicle_damage_code
+        ) VALUES (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            $6,
+            $7,
+            $8,
+            $9,
+            $10,
+            $11,
+            $12,
+            $13,
+            $14
+        );
+        "#,
+        involved_person.id,
+        involved_person.accident_id,
+        involved_person.sub_number,
+        involved_person.party_code,
+        involved_person.purpose_code,
+        involved_person.vehicle_type_code,
+        involved_person.riding_type_code,
+        involved_person.riding_class_code,
+        involved_person.support_car_code,
+        involved_person.airbag_code,
+        involved_person.side_airbag_code,
+        involved_person.injury_code,
+        involved_person.collision_part,
+        involved_person.vehicle_damage_code
     )
     .execute(&mut **tx)
     .await?;
