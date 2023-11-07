@@ -1,3 +1,3 @@
 [workspace]
-members = ["taod-cli", "taod-web"]
+members = ["taod-cli", "taod-web", "db", "geometries"]
 resolver = "2"

@@ -2,28 +2,12 @@ use std::collections::HashMap;
 
 use geo_types::{Geometry, Point};
 use geozero::wkb;
-use sqlx::postgres::PgPoolOptions;
-use sqlx::{Pool, Postgres, Transaction};
+use sqlx::PgPool;
 
 use crate::files::{RawAccident, RawInvolvedPerson};
+use db::PgTransaction;
 
 type GeometryF64 = Geometry<f64>;
-type PgTransaction<'a> = Transaction<'a, Postgres>;
-
-/// データベースコネクションプールを返す。
-///
-/// # 戻り値
-///
-/// データベースコネクションプール
-pub async fn connection_pool() -> anyhow::Result<Pool<Postgres>> {
-    let database_url = std::env::var("DATABASE_URL")?;
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&database_url)
-        .await?;
-
-    Ok(pool)
-}
 
 /// 本票の都道府県コードとJIS規格の都道府県コードの対応を記録したハッシュマップを返す。
 ///
@@ -34,7 +18,7 @@ pub async fn connection_pool() -> anyhow::Result<Pool<Postgres>> {
 /// # 戻り値
 ///
 /// 本票の都道府県コードとJIS規格の都道府県コードの対応を記録したハッシュマップ
-pub async fn prefecture_hash_map(pool: &Pool<Postgres>) -> anyhow::Result<HashMap<String, String>> {
+pub async fn prefecture_hash_map(pool: &PgPool) -> anyhow::Result<HashMap<String, String>> {
     let mut prefectures = HashMap::new();
     let rows = sqlx::query!(
         r#"
