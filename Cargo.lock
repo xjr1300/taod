@@ -2005,6 +2005,7 @@ dependencies = [
  "dotenvy",
  "geo-types",
  "geojson",
+ "geometries",
  "geozero",
  "serde",
  "serde_json",
