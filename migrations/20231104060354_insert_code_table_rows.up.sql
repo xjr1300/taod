@@ -3276,8 +3276,11 @@ INSERT INTO road_widths (code, name) VALUES ('04', '単路ー9.0m以上');
 INSERT INTO road_widths (code, name) VALUES ('05', '単路ー13.0m以上');
 INSERT INTO road_widths (code, name) VALUES ('06', '単路ー19.5m以上');
 INSERT INTO road_widths (code, name) VALUES ('11', '交差点ー小（5.5m未満）－小');
+INSERT INTO road_widths (code, name) VALUES ('12', '（コード表に記載なし）');
+INSERT INTO road_widths (code, name) VALUES ('13', '（コード表に記載なし）');
 INSERT INTO road_widths (code, name) VALUES ('14', '交差点ー中（5.5m以上）－小');
 INSERT INTO road_widths (code, name) VALUES ('15', '交差点ー中（5.5m以上）－中');
+INSERT INTO road_widths (code, name) VALUES ('16', '（コード表に記載なし）');
 INSERT INTO road_widths (code, name) VALUES ('17', '交差点ー大（13.0m以上）－小');
 INSERT INTO road_widths (code, name) VALUES ('18', '交差点ー大（13.0m以上）－中');
 INSERT INTO road_widths (code, name) VALUES ('19', '交差点ー大（13.0m以上）－大');
@@ -3443,7 +3446,7 @@ INSERT INTO holidays (code, name) VALUES ('2', '前日');
 INSERT INTO holidays (code, name) VALUES ('3', 'その他');
 
 -- 運転練習の方法テーブル
-INSERT INTO driving_practices (code, name) VALUES ('0', 'その他');
+INSERT INTO driving_practices (code, name) VALUES ('0', '（コード表に記載なし）');
 INSERT INTO driving_practices (code, name) VALUES ('1', '一般（指定自動車教習所）');
 INSERT INTO driving_practices (code, name) VALUES ('2', '一般（届出自動車教習所）');
 INSERT INTO driving_practices (code, name) VALUES ('3', '一般（その他の自動車教習所）');
