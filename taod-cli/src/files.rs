@@ -8,11 +8,11 @@ use uuid::Uuid;
 
 /// 交通事故識別子
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct RawAccidentIdentifier {
+pub struct RawAccidentIdentifier<'a> {
     /// 都道府県コード
-    pub prefecture_code: String,
+    pub prefecture_code: &'a str,
     /// 警察署コード
-    pub police_station_code: String,
+    pub police_station_code: &'a str,
     /// 本票番号
     pub main_number: i32,
 }
@@ -153,8 +153,8 @@ impl RawAccident {
     /// 交通事故識別子
     pub fn identifier(&self) -> RawAccidentIdentifier {
         RawAccidentIdentifier {
-            prefecture_code: self.prefecture_code.clone(),
-            police_station_code: self.police_station_code.clone(),
+            prefecture_code: &self.prefecture_code,
+            police_station_code: &self.police_station_code,
             main_number: self.main_number,
         }
     }
@@ -345,8 +345,8 @@ fn row_to_involved_person(
     let police_station_code = read_str_column(row, row_index, 2)?;
     let main_number = read_i32_column(row, row_index, 3)?;
     let identifier = RawAccidentIdentifier {
-        prefecture_code,
-        police_station_code,
+        prefecture_code: &prefecture_code,
+        police_station_code: &police_station_code,
         main_number,
     };
 
