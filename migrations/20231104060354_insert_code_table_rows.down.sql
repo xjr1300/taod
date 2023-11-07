@@ -1,5 +1,6 @@
 DELETE FROM involved_persons;
 DELETE FROM accidents;
+DELETE FROM riding_classes;
 DELETE FROM riding_types;
 DELETE FROM driving_practices;
 DELETE FROM holidays;
