@@ -65,14 +65,15 @@ pub async fn register_accidents(
     tx: &mut Transaction<'_, Postgres>,
     accidents: &[RawAccident],
 ) -> anyhow::Result<()> {
-    for accident in accidents {
+    for (index, accident) in accidents.iter().enumerate() {
         let location = Point::new(accident.location.x(), accident.location.y());
         let location: GeometryF64 = location.into();
         insert_accident(tx, accident, location).await.map_err(|e| {
             anyhow::anyhow!(
-                "交通事故をデータベースに登録する際に、INSERT文を実行できませんでした。{}: {:?}",
+                "交通事故をデータベースに登録する際に、INSERT文を実行できませんでした。{}: {:?}: {}データ目",
                 e,
                 accident,
+                index,
             )
         })?;
     }

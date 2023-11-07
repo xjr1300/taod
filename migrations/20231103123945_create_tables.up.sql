@@ -343,7 +343,7 @@ CREATE TABLE holidays (
     -- 祝日コード
     code CHAR(1) NOT NULL,
     -- 祝日名
-    name VARCHAR(10) NOT NULL,
+    name VARCHAR(20) NOT NULL,
     -- 主キー制約
     PRIMARY KEY (code)
 );

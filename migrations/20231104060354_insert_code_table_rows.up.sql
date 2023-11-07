@@ -10,21 +10,21 @@ INSERT INTO prefectures (code, name, jis_code) VALUES ('22', '宮城', '04');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('23', '秋田', '05');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('24', '山形', '06');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('25', '福島', '07');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('30', '東京', '08');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('40', '茨城', '09');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('41', '栃木', '10');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('42', '群馬', '11');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('43', '埼玉', '12');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('44', '千葉', '13');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('30', '東京', '13');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('40', '茨城', '08');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('41', '栃木', '09');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('42', '群馬', '10');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('43', '埼玉', '11');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('44', '千葉', '12');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('45', '神奈川', '14');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('46', '新潟', '15');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('47', '山梨', '16');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('48', '長野', '17');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('49', '静岡', '18');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('50', '富山', '19');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('51', '石川', '20');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('52', '福井', '21');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('53', '岐阜', '22');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('47', '山梨', '19');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('48', '長野', '20');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('49', '静岡', '22');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('50', '富山', '16');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('51', '石川', '17');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('52', '福井', '18');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('53', '岐阜', '21');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('54', '愛知', '23');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('55', '三重', '24');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('60', '滋賀', '25');
@@ -3198,6 +3198,8 @@ INSERT INTO cities (city_jis_code, prefecture_jis_code, city_name) VALUES ('4736
 INSERT INTO cities (city_jis_code, prefecture_jis_code, city_name) VALUES ('47375', '47', '多良間村');
 INSERT INTO cities (city_jis_code, prefecture_jis_code, city_name) VALUES ('47381', '47', '竹富町');
 INSERT INTO cities (city_jis_code, prefecture_jis_code, city_name) VALUES ('47382', '47', '与那国町');
+INSERT INTO cities (city_jis_code, prefecture_jis_code, city_name) VALUES ('47995', '47', '（不明）');
+INSERT INTO cities (city_jis_code, prefecture_jis_code, city_name) VALUES ('47996', '47', '（不明）');
 
 -- 昼夜テーブル
 INSERT INTO day_nights (code, name) VALUES ('11', '昼－明');
@@ -3407,6 +3409,7 @@ INSERT INTO speed_regulations (code, name) VALUES ('08', '100㎞/h以下');
 INSERT INTO speed_regulations (code, name) VALUES ('11', '120㎞/h以下');
 INSERT INTO speed_regulations (code, name) VALUES ('10', '指定の速度規制なし等');
 INSERT INTO speed_regulations (code, name) VALUES ('12', '120㎞/h超過');
+INSERT INTO speed_regulations (code, name) VALUES ('40', '（コード表に記載なし）');
 
 -- 車両の損傷程度テーブル
 INSERT INTO vehicle_damages (code, name) VALUES ('0', '対象外当事者');
@@ -3441,6 +3444,7 @@ INSERT INTO weeks (code, name) VALUES ('6', '金');
 INSERT INTO weeks (code, name) VALUES ('7', '土');
 
 -- 祝日テーブル
+INSERT INTO holidays (code, name) VALUES ('0', '（コード表に記載なし）');
 INSERT INTO holidays (code, name) VALUES ('1', '当日');
 INSERT INTO holidays (code, name) VALUES ('2', '前日');
 INSERT INTO holidays (code, name) VALUES ('3', 'その他');
