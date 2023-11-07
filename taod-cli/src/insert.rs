@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use crate::db::{connection_pool, prefecture_hash_map, register_accidents};
+use crate::db::{
+    connection_pool, prefecture_hash_map, register_accidents, register_involved_persons,
+};
 use crate::files::{read_accidents, read_involved_persons};
 
 /// データベースに交通事故を登録する。
@@ -38,7 +40,8 @@ pub async fn insert<P: AsRef<Path>>(main_file: P, _support_file: P) -> anyhow::R
 
     // 交通事故をデータベースに登録
     register_accidents(&mut tx, &accidents).await?;
-    // TODO: 交通事故当事者以外の関係者をデータベースに登録
+    // 交通事故当事者以外の関係者をデータベースに登録
+    register_involved_persons(&mut tx, &involved_persons).await?;
 
     // トランザクションをコミット
     tx.commit().await.map_err(|_| {

@@ -162,6 +162,7 @@ impl RawAccident {
 }
 
 /// 交通事故当事者以外の関与者
+#[derive(Debug, Clone)]
 pub struct RawInvolvedPerson {
     /// 事故関与者ID
     pub id: Uuid,
