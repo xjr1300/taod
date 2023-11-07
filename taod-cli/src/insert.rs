@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use crate::db::{
-    connection_pool, prefecture_hash_map, register_accidents, register_involved_persons,
-};
+use crate::db::{prefecture_hash_map, register_accidents, register_involved_persons};
 use crate::files::{read_accidents, read_involved_persons};
+use db::connection_pool;
 
 /// データベースに交通事故を登録する。
 ///
