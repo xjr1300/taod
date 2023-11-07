@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 
-use geo_types::{Geometry, Point};
+use geo_types::Point;
 use geozero::wkb;
 use sqlx::PgPool;
 
 use crate::files::{RawAccident, RawInvolvedPerson};
 use db::PgTransaction;
-
-type GeometryF64 = Geometry<f64>;
+use geometries::GeometryF64;
 
 /// 本票の都道府県コードとJIS規格の都道府県コードの対応を記録したハッシュマップを返す。
 ///

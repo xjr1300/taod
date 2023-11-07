@@ -13,7 +13,7 @@ async fn main() -> anyhow::Result<()> {
         App::new().app_data(web::Data::new(pool.clone())).service(
             web::scope("/api")
                 .route("/health-check", web::get().to(health_check))
-                .route("/accidents", web::get().to(accident_list)),
+                .route("/accidents/{prefecture_code}", web::get().to(accident_list)),
         )
     })
     .bind(("127.0.0.1", 8002))?
