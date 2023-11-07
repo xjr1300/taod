@@ -405,14 +405,14 @@ CREATE TABLE accidents (
     -- 発生日時
     occurred_at TIMESTAMP WITH TIME ZONE NOT NULL,
     -- 昼夜コード
-    day_night_code CHAR(1) NOT NULL,
+    day_night_code CHAR(2) NOT NULL,
     -- 日の出時刻
     sunrise_time TIME NOT NULL,
     -- 日の入時刻
     sunset_time TIME NOT NULL,
     -- 天候コード
     weather_code CHAR(1) NOT NULL,
-    -- 地区コード
+    -- 地形（地区）コード
     district_code CHAR(1) NOT NULL,
     -- 路面状態コード
     surface_condition_code CHAR(1) NOT NULL,
