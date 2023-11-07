@@ -3443,6 +3443,7 @@ INSERT INTO holidays (code, name) VALUES ('2', '前日');
 INSERT INTO holidays (code, name) VALUES ('3', 'その他');
 
 -- 運転練習の方法テーブル
+INSERT INTO driving_practices (code, name) VALUES ('0', 'その他');
 INSERT INTO driving_practices (code, name) VALUES ('1', '一般（指定自動車教習所）');
 INSERT INTO driving_practices (code, name) VALUES ('2', '一般（届出自動車教習所）');
 INSERT INTO driving_practices (code, name) VALUES ('3', '一般（その他の自動車教習所）');
