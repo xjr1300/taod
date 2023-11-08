@@ -6,7 +6,10 @@ use geojson::{FeatureCollection, GeoJson};
 use serde_json::value::Value::{Number as SerdeNumber, String as SerdeString};
 use sqlx::PgPool;
 
+use crate::map::SRID_JGD2001;
+use crate::map::{tile_bbox, TileCoordinate};
 use crate::models::Accident;
+use crate::settings::Settings;
 
 /// HTTPリクエストハンドラの戻り値の型
 pub type HandlerResult = Result<HttpResponse, actix_web::error::Error>;
@@ -19,12 +22,28 @@ pub type HandlerResult = Result<HttpResponse, actix_web::error::Error>;
 ///
 /// # 戻り値
 ///
-/// `actix_web::error::ErrorBadRequest`
+/// `actix_web::error::ErrorInternalServerError`
 pub fn e500<E>(err: E) -> actix_web::Error
 where
     E: Debug + Display + 'static,
 {
     actix_web::error::ErrorInternalServerError(err)
+}
+
+/// 400 Bad Request Errorを作成する。
+///
+/// # 引数
+///
+/// * `err` - エラー
+///
+/// # 戻り値
+///
+/// `actix_web::error::ErrorBadRequest`
+pub fn e400<E>(err: E) -> actix_web::Error
+where
+    E: Debug + Display + 'static,
+{
+    actix_web::error::ErrorBadRequest(err)
 }
 
 /// ヘルスチェックハンドラ
@@ -33,8 +52,23 @@ pub async fn health_check() -> impl Responder {
 }
 
 /// 交通事故リストハンドラ
-pub async fn accident_list(pool: web::Data<PgPool>, path: web::Path<(String,)>) -> HandlerResult {
-    let (prefecture_code,) = path.into_inner();
+pub async fn accident_list(
+    settings: web::Data<Settings>,
+    pool: web::Data<PgPool>,
+    tile_coordinate: web::Path<TileCoordinate>,
+) -> HandlerResult {
+    // ズームレベルを確認
+    let zoom_level = settings.web_app.traffic_accident_zoom_level;
+    if tile_coordinate.z < zoom_level {
+        return Err(e400(format!(
+            "交通事故はズームレベル{}以上から取得できます。",
+            zoom_level
+        )));
+    }
+    // タイル内の交通事故を取得
+    let bbox = tile_bbox(tile_coordinate.into_inner());
+    // FIXME: ST_BUFFERを使ってタイルの少し外側も取得するように変更する。
+    // FIXME: バッファのサイズはズームレベルに応じて変更する。
     let accidents = sqlx::query_as!(
         Accident,
         r#"
@@ -61,14 +95,29 @@ pub async fn accident_list(pool: web::Data<PgPool>, path: web::Path<(String,)>) 
         INNER JOIN cities ci ON a.city_jis_code = ci.city_jis_code
         INNER JOIN weathers we ON a.weather_code = we.code
         INNER JOIN surface_conditions su ON a.surface_condition_code = su.code
-        WHERE ci.prefecture_jis_code = $1
+        WHERE
+            ST_CONTAINS(
+                ST_MakeEnvelope(
+                    $1,
+                    $2,
+                    $3,
+                    $4,
+                    $5
+                ),
+                a.location
+            )
         "#,
-        prefecture_code
+        bbox.x_min,
+        bbox.y_min,
+        bbox.x_max,
+        bbox.y_max,
+        SRID_JGD2001 as i32,
     )
     .fetch_all(pool.as_ref())
     .await
     .map_err(e500)?;
 
+    // GeoJSONに変換
     let features = accidents
         .into_iter()
         .map(|accident| {
