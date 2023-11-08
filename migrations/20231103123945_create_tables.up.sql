@@ -605,6 +605,8 @@ CREATE TABLE accidents (
     -- 外部参照制約 運転練習の方法（当事者B）
     FOREIGN KEY (driving_practice_b_code) REFERENCES driving_practices(code)
 );
+-- 交通事故テーブルに空間インデックスを作成
+CREATE INDEX idx_accidents_location ON accidents USING GIST (location);
 
 -- 交通事故当事者以外関与者テーブル
 CREATE TABLE involved_persons (
