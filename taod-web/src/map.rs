@@ -1,5 +1,8 @@
 use std::f64::consts::PI;
 
+/// 日本測地系2011
+pub const SRID_JGD2001: u32 = 6668;
+
 /// タイル座標
 #[derive(Debug, Clone, Copy, serde::Deserialize)]
 pub struct TileCoordinate {
