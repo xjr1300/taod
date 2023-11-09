@@ -59,7 +59,7 @@ impl BBox {
     /// # 戻り値
     ///
     /// 拡大したバウンダリーボックス
-    pub fn extent(&self, ratio: f64) -> Self {
+    pub fn extend(&self, ratio: f64) -> Self {
         let distance = (self.y_max - self.y_min) * ratio;
 
         Self {
@@ -289,5 +289,35 @@ mod tests {
         assert!((expected.1 - actual.y_min).abs() < 1e-6);
         assert!((expected.2 - actual.x_max).abs() < 1e-6);
         assert!((expected.3 - actual.y_max).abs() < 1e-6);
+    }
+
+    #[test]
+    fn bbox_extend_ok() {
+        let bbox = BBox {
+            x_min: 0.0,
+            y_min: 0.0,
+            x_max: 1.0,
+            y_max: 1.0,
+        };
+        let actual = bbox.extend(0.1);
+        assert!((bbox.x_min - 0.1 - actual.x_min).abs() < 1e-6);
+        assert!((bbox.y_min - 0.1 - actual.y_min).abs() < 1e-6);
+        assert!((bbox.x_max + 0.1 - actual.x_max).abs() < 1e-6);
+        assert!((bbox.y_max + 0.1 - actual.y_max).abs() < 1e-6);
+    }
+
+    #[test]
+    fn bbox_extend_zero_ok() {
+        let bbox = BBox {
+            x_min: 0.0,
+            y_min: 0.0,
+            x_max: 1.0,
+            y_max: 1.0,
+        };
+        let actual = bbox.extend(0.0);
+        assert!((bbox.x_min - actual.x_min).abs() < 1e-6);
+        assert!((bbox.y_min - actual.y_min).abs() < 1e-6);
+        assert!((bbox.x_max - actual.x_max).abs() < 1e-6);
+        assert!((bbox.y_max - actual.y_max).abs() < 1e-6);
     }
 }
