@@ -1,3 +1,5 @@
+use std::net::TcpListener;
+
 use actix_web::{web, App, HttpServer};
 
 use db::connection_pool;
@@ -13,6 +15,9 @@ async fn main() -> anyhow::Result<()> {
     let settings = get_settings().map_err(|e| anyhow::anyhow!(e))?;
     let pool = connection_pool().await?;
 
+    let address = format!("{}:{}", settings.web_app.host, settings.web_app.port);
+    let listener = TcpListener::bind(address)?;
+
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(settings.clone()))
@@ -23,7 +28,7 @@ async fn main() -> anyhow::Result<()> {
                     .route("/accidents/{z}/{x}/{y}", web::get().to(accident_list)),
             )
     })
-    .bind(("127.0.0.1", 8002))?
+    .listen(listener)?
     .run()
     .await
     .map_err(|e| anyhow::anyhow!(e))
