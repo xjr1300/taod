@@ -3,6 +3,10 @@ use std::f64::consts::PI;
 /// 日本測地系2011
 pub const SRID_JGD2001: u32 = 6668;
 
+/// 測地基準系1980(GRS80)楕円体長半径(m)
+/// 日本測地型2011の楕円体における長半径
+pub const GRS80_MAJOR_AXIS: f64 = 6378137.0;
+
 /// タイル座標
 #[derive(Debug, Clone, Copy, serde::Deserialize)]
 pub struct TileCoordinate {
@@ -43,6 +47,28 @@ pub struct BBox {
     pub x_max: f64,
     /// Y座標の最大値
     pub y_max: f64,
+}
+
+impl BBox {
+    /// バウンダリーボックスを緯度方向の距離を基準に指定された率だけ上下左右方向に拡大する。
+    ///
+    /// # 引数
+    ///
+    /// * `ratio` - 拡大率
+    ///
+    /// # 戻り値
+    ///
+    /// 拡大したバウンダリーボックス
+    pub fn extent(&self, ratio: f64) -> Self {
+        let distance = (self.y_max - self.y_min) * ratio;
+
+        Self {
+            x_min: self.x_min - distance,
+            y_min: self.y_min - distance,
+            x_max: self.x_max + distance,
+            y_max: self.y_max + distance,
+        }
+    }
 }
 
 /// 経度、緯度及びズームレベルからタイル座標を計算する。
