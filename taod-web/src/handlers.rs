@@ -13,13 +13,47 @@ use crate::map::{tile_bbox, TileCoordinate};
 use crate::models::Accident;
 use crate::settings::Settings;
 
-/// エラーレスポンス
+/// アプリケーションエラーレスポンス
 #[derive(Debug, serde::Serialize, thiserror::Error)]
-pub enum AppResponseError {
+pub enum AppErrorResponse {
     /// リクエストが不正
-    BadRequest(Option<AppError>, Cow<'static, str>),
+    BadRequest(AppErrorContent),
     /// サーバー内部エラー
-    InternalServerError(Option<AppError>, Cow<'static, str>),
+    InternalServerError(AppErrorContent),
+}
+
+impl Display for AppErrorResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", to_string_pretty(self).unwrap())
+    }
+}
+
+impl ResponseError for AppErrorResponse {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            AppErrorResponse::BadRequest(_) => StatusCode::BAD_REQUEST,
+            AppErrorResponse::InternalServerError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+
+    fn error_response(&self) -> HttpResponse {
+        let status_code = self.status_code();
+        match self {
+            AppErrorResponse::BadRequest(content) => HttpResponse::build(status_code)
+                .json(AppResponseErrorBody::new(status_code, content)),
+            AppErrorResponse::InternalServerError(content) => HttpResponse::build(status_code)
+                .json(AppResponseErrorBody::new(status_code, content)),
+        }
+    }
+}
+
+/// アプリケーションエラーコンテンツ
+#[derive(Debug, serde::Serialize)]
+pub struct AppErrorContent {
+    /// アプリケーションエラー
+    pub app_error: Option<AppError>,
+    /// エラーメッセージ
+    pub message: Cow<'static, str>,
 }
 
 /// アプリケーションエラー
@@ -46,36 +80,12 @@ pub struct AppResponseErrorBody {
     pub message: String,
 }
 
-impl Display for AppResponseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", to_string_pretty(self).unwrap())
-    }
-}
-
-impl ResponseError for AppResponseError {
-    fn status_code(&self) -> StatusCode {
-        match self {
-            AppResponseError::BadRequest(_, _) => StatusCode::BAD_REQUEST,
-            AppResponseError::InternalServerError(_, _) => StatusCode::INTERNAL_SERVER_ERROR,
-        }
-    }
-
-    fn error_response(&self) -> HttpResponse {
-        let status_code = self.status_code();
-        match self {
-            AppResponseError::BadRequest(app_error, message) => HttpResponse::build(status_code)
-                .json(AppResponseErrorBody {
-                    status_code: status_code.as_u16(),
-                    app_error: *app_error,
-                    message: message.to_string(),
-                }),
-            AppResponseError::InternalServerError(app_error, message) => {
-                HttpResponse::build(status_code).json(AppResponseErrorBody {
-                    status_code: status_code.as_u16(),
-                    app_error: *app_error,
-                    message: message.to_string(),
-                })
-            }
+impl AppResponseErrorBody {
+    fn new(status_code: StatusCode, content: &AppErrorContent) -> Self {
+        Self {
+            status_code: status_code.as_u16(),
+            app_error: content.app_error,
+            message: content.message.to_string(),
         }
     }
 }
@@ -94,10 +104,10 @@ pub async fn accident_list(
     // ズームレベルを確認
     let zoom_level = settings.web_app.traffic_accident_zoom_level;
     if tile_coordinate.z < zoom_level {
-        return Err(AppResponseError::BadRequest(
-            Some(AppError::AccidentZoomLevel),
-            format!("交通事故はズームレベル{}以上から取得できます。", zoom_level).into(),
-        )
+        return Err(AppErrorResponse::BadRequest(AppErrorContent {
+            app_error: Some(AppError::AccidentZoomLevel),
+            message: format!("交通事故はズームレベル{}以上から取得できます。", zoom_level).into(),
+        })
         .into());
     }
     // タイル内の交通事故を取得
@@ -151,7 +161,10 @@ pub async fn accident_list(
     .fetch_all(pool.as_ref())
     .await
     .map_err(|e| {
-        AppResponseError::InternalServerError(Some(AppError::Database), e.to_string().into())
+        AppErrorResponse::InternalServerError(AppErrorContent {
+            app_error: Some(AppError::Database),
+            message: e.to_string().into(),
+        })
     })?;
 
     // GeoJSONに変換
