@@ -35,3 +35,9 @@ docker-compose up -d
 ```sh
 sqlx migrate run
 ```
+
+### 交通事故オープンデータ（2022年度）のデータベース登録
+
+```sh
+cargo run --release --bin taod-cli -- import <honhyou.csv> <hojuhyo.csv>
+```
