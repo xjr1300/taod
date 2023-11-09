@@ -102,18 +102,20 @@ pub async fn accident_list(
     tile_coordinate: web::Path<TileCoordinate>,
 ) -> actix_web::Result<HttpResponse> {
     // ズームレベルを確認
-    let zoom_level = settings.web_app.traffic_accident_zoom_level;
-    if tile_coordinate.z < zoom_level {
+    if tile_coordinate.z < settings.web_app.accident_zoom_level {
         return Err(AppErrorResponse::BadRequest(AppErrorContent {
             app_error: Some(AppError::AccidentZoomLevel),
-            message: format!("交通事故はズームレベル{}以上から取得できます。", zoom_level).into(),
+            message: format!(
+                "交通事故はズームレベル{}以上から取得できます。",
+                settings.web_app.accident_zoom_level
+            )
+            .into(),
         })
         .into());
     }
     // タイル内の交通事故を取得
     let bbox = tile_bbox(tile_coordinate.into_inner());
-    // FIXME: ST_BUFFERを使ってタイルの少し外側も取得するように変更する。
-    // FIXME: バッファのサイズはズームレベルに応じて変更する。
+    let bbox = bbox.extent(settings.web_app.accident_buffer_ratio);
     let accidents = sqlx::query_as!(
         Accident,
         r#"
