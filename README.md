@@ -41,3 +41,27 @@ sqlx migrate run
 ```sh
 cargo run --release --bin taod-cli -- import <honhyou.csv> <hojuhyo.csv>
 ```
+
+### ローカル環境における交通事故APIサーバーの起動
+
+`./settings/base.yml`と`./settings/local.yml`を編集してから以下を実行する。
+
+```sh
+cargo run --bin taod-web
+```
+
+### プロダクション環境における交通事故APIサーバーの起動
+
+`./settings/base.yml`と`./production/local.yml`を編集してから以下を実行する。
+
+```sh
+cargo build --release
+sudo setcap CAP_NET_BIND_SERVICE=+eip .target/release/taod-web
+. ./target/release/taod-web
+```
+
+### 交通事故APIの呼び出し
+
+```sh
+curl http://localhost:8002/api/accidents/14/14414/6467
+```
