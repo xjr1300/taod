@@ -1,8 +1,10 @@
+use std::borrow::Cow;
 use std::fmt::{Debug, Display};
 
 use actix_web::http::{header::ContentType, StatusCode};
-use actix_web::{web, HttpResponse, HttpResponseBuilder, Responder};
+use actix_web::{web, HttpResponse, HttpResponseBuilder, Responder, ResponseError};
 use geojson::{FeatureCollection, GeoJson};
+use serde_json::to_string_pretty;
 use serde_json::value::Value::{Number as SerdeNumber, String as SerdeString};
 use sqlx::PgPool;
 
@@ -11,39 +13,71 @@ use crate::map::{tile_bbox, TileCoordinate};
 use crate::models::Accident;
 use crate::settings::Settings;
 
-/// HTTPリクエストハンドラの戻り値の型
-pub type HandlerResult = Result<HttpResponse, actix_web::error::Error>;
-
-/// 500 Internal Server Errorを作成する。
-///
-/// # 引数
-///
-/// * `err` - エラー
-///
-/// # 戻り値
-///
-/// `actix_web::error::ErrorInternalServerError`
-pub fn e500<E>(err: E) -> actix_web::Error
-where
-    E: Debug + Display + 'static,
-{
-    actix_web::error::ErrorInternalServerError(err)
+/// エラーレスポンス
+#[derive(Debug, serde::Serialize, thiserror::Error)]
+pub enum AppResponseError {
+    /// リクエストが不正
+    BadRequest(Option<AppError>, Cow<'static, str>),
+    /// サーバー内部エラー
+    InternalServerError(Option<AppError>, Cow<'static, str>),
 }
 
-/// 400 Bad Request Errorを作成する。
-///
-/// # 引数
-///
-/// * `err` - エラー
-///
-/// # 戻り値
-///
-/// `actix_web::error::ErrorBadRequest`
-pub fn e400<E>(err: E) -> actix_web::Error
-where
-    E: Debug + Display + 'static,
-{
-    actix_web::error::ErrorBadRequest(err)
+/// アプリケーションエラー
+#[derive(Debug, Clone, Copy, serde_repr::Serialize_repr)]
+#[repr(u8)]
+pub enum AppError {
+    /// 特に説明を必要としないエラー
+    None = 0,
+    /// データベースエラー
+    Database = 1,
+    /// 交通事故ズームレベルエラー
+    AccidentZoomLevel = 2,
+}
+
+#[derive(Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppResponseErrorBody {
+    /// レスポンスステータスコード
+    pub status_code: u16,
+    /// アプリケーションエラー
+    #[serde(rename(serialize = "appErrorCode"))]
+    pub app_error: Option<AppError>,
+    /// エラーメッセージ
+    pub message: String,
+}
+
+impl Display for AppResponseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", to_string_pretty(self).unwrap())
+    }
+}
+
+impl ResponseError for AppResponseError {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            AppResponseError::BadRequest(_, _) => StatusCode::BAD_REQUEST,
+            AppResponseError::InternalServerError(_, _) => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+
+    fn error_response(&self) -> HttpResponse {
+        let status_code = self.status_code();
+        match self {
+            AppResponseError::BadRequest(app_error, message) => HttpResponse::build(status_code)
+                .json(AppResponseErrorBody {
+                    status_code: status_code.as_u16(),
+                    app_error: *app_error,
+                    message: message.to_string(),
+                }),
+            AppResponseError::InternalServerError(app_error, message) => {
+                HttpResponse::build(status_code).json(AppResponseErrorBody {
+                    status_code: status_code.as_u16(),
+                    app_error: *app_error,
+                    message: message.to_string(),
+                })
+            }
+        }
+    }
 }
 
 /// ヘルスチェックハンドラ
@@ -56,14 +90,15 @@ pub async fn accident_list(
     settings: web::Data<Settings>,
     pool: web::Data<PgPool>,
     tile_coordinate: web::Path<TileCoordinate>,
-) -> HandlerResult {
+) -> actix_web::Result<HttpResponse> {
     // ズームレベルを確認
     let zoom_level = settings.web_app.traffic_accident_zoom_level;
     if tile_coordinate.z < zoom_level {
-        return Err(e400(format!(
-            "交通事故はズームレベル{}以上から取得できます。",
-            zoom_level
-        )));
+        return Err(AppResponseError::BadRequest(
+            Some(AppError::AccidentZoomLevel),
+            format!("交通事故はズームレベル{}以上から取得できます。", zoom_level).into(),
+        )
+        .into());
     }
     // タイル内の交通事故を取得
     let bbox = tile_bbox(tile_coordinate.into_inner());
@@ -115,7 +150,9 @@ pub async fn accident_list(
     )
     .fetch_all(pool.as_ref())
     .await
-    .map_err(e500)?;
+    .map_err(|e| {
+        AppResponseError::InternalServerError(Some(AppError::Database), e.to_string().into())
+    })?;
 
     // GeoJSONに変換
     let features = accidents
