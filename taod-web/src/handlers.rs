@@ -115,7 +115,7 @@ pub async fn accident_list(
     }
     // タイル内の交通事故を取得
     let bbox = tile_bbox(tile_coordinate.into_inner());
-    let bbox = bbox.extent(settings.web_app.accident_buffer_ratio);
+    let bbox = bbox.extend(settings.web_app.accident_buffer_ratio);
     let accidents = sqlx::query_as!(
         Accident,
         r#"
