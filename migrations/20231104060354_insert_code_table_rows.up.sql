@@ -10,21 +10,21 @@ INSERT INTO prefectures (code, name, jis_code) VALUES ('22', '宮城', '04');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('23', '秋田', '05');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('24', '山形', '06');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('25', '福島', '07');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('30', '東京', '08');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('40', '茨城', '09');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('41', '栃木', '10');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('42', '群馬', '11');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('43', '埼玉', '12');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('44', '千葉', '13');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('30', '東京', '13');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('40', '茨城', '08');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('41', '栃木', '09');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('42', '群馬', '10');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('43', '埼玉', '11');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('44', '千葉', '12');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('45', '神奈川', '14');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('46', '新潟', '15');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('47', '山梨', '16');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('48', '長野', '17');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('49', '静岡', '18');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('50', '富山', '19');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('51', '石川', '20');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('52', '福井', '21');
-INSERT INTO prefectures (code, name, jis_code) VALUES ('53', '岐阜', '22');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('47', '山梨', '19');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('48', '長野', '20');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('49', '静岡', '22');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('50', '富山', '16');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('51', '石川', '17');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('52', '福井', '18');
+INSERT INTO prefectures (code, name, jis_code) VALUES ('53', '岐阜', '21');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('54', '愛知', '23');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('55', '三重', '24');
 INSERT INTO prefectures (code, name, jis_code) VALUES ('60', '滋賀', '25');
@@ -3198,6 +3198,8 @@ INSERT INTO cities (city_jis_code, prefecture_jis_code, city_name) VALUES ('4736
 INSERT INTO cities (city_jis_code, prefecture_jis_code, city_name) VALUES ('47375', '47', '多良間村');
 INSERT INTO cities (city_jis_code, prefecture_jis_code, city_name) VALUES ('47381', '47', '竹富町');
 INSERT INTO cities (city_jis_code, prefecture_jis_code, city_name) VALUES ('47382', '47', '与那国町');
+INSERT INTO cities (city_jis_code, prefecture_jis_code, city_name) VALUES ('47995', '47', '（不明）');
+INSERT INTO cities (city_jis_code, prefecture_jis_code, city_name) VALUES ('47996', '47', '（不明）');
 
 -- 昼夜テーブル
 INSERT INTO day_nights (code, name) VALUES ('11', '昼－明');
@@ -3269,18 +3271,21 @@ INSERT INTO stop_regulation_displays (code, name) VALUES ('22', '表示なし');
 
 -- 車道幅員テーブル
 INSERT INTO road_widths (code, name) VALUES ('00', '一般交通の場所');
-INSERT INTO road_widths (code, name) VALUES ('01', '単路－3.5m未満');
-INSERT INTO road_widths (code, name) VALUES ('02', '単路－3.5m以上');
-INSERT INTO road_widths (code, name) VALUES ('03', '単路－5.5m以上');
-INSERT INTO road_widths (code, name) VALUES ('04', '単路－9.0m以上');
-INSERT INTO road_widths (code, name) VALUES ('05', '単路－13.0m以上');
-INSERT INTO road_widths (code, name) VALUES ('06', '単路－19.5m以上');
-INSERT INTO road_widths (code, name) VALUES ('11', '交差点－小（5.5m未満）－小');
-INSERT INTO road_widths (code, name) VALUES ('14', '交差点－中（5.5m以上）－小');
-INSERT INTO road_widths (code, name) VALUES ('15', '交差点－中（5.5m以上）－中');
-INSERT INTO road_widths (code, name) VALUES ('17', '交差点－大（13.0ｍ以上）－小');
-INSERT INTO road_widths (code, name) VALUES ('18', '交差点－大（13.0ｍ以上）－中');
-INSERT INTO road_widths (code, name) VALUES ('19', '交差点－大（13.0ｍ以上）－大');
+INSERT INTO road_widths (code, name) VALUES ('01', '単路ー3.5m未満');
+INSERT INTO road_widths (code, name) VALUES ('02', '単路ー3.5m以上');
+INSERT INTO road_widths (code, name) VALUES ('03', '単路ー5.5m以上');
+INSERT INTO road_widths (code, name) VALUES ('04', '単路ー9.0m以上');
+INSERT INTO road_widths (code, name) VALUES ('05', '単路ー13.0m以上');
+INSERT INTO road_widths (code, name) VALUES ('06', '単路ー19.5m以上');
+INSERT INTO road_widths (code, name) VALUES ('11', '交差点ー小（5.5m未満）－小');
+INSERT INTO road_widths (code, name) VALUES ('12', '（コード表に記載なし）');
+INSERT INTO road_widths (code, name) VALUES ('13', '（コード表に記載なし）');
+INSERT INTO road_widths (code, name) VALUES ('14', '交差点ー中（5.5m以上）－小');
+INSERT INTO road_widths (code, name) VALUES ('15', '交差点ー中（5.5m以上）－中');
+INSERT INTO road_widths (code, name) VALUES ('16', '（コード表に記載なし）');
+INSERT INTO road_widths (code, name) VALUES ('17', '交差点ー大（13.0m以上）－小');
+INSERT INTO road_widths (code, name) VALUES ('18', '交差点ー大（13.0m以上）－中');
+INSERT INTO road_widths (code, name) VALUES ('19', '交差点ー大（13.0m以上）－大');
 
 -- 道路線形テーブル
 INSERT INTO road_alignments (code, name) VALUES ('0', '一般交通の場所');
@@ -3338,7 +3343,8 @@ INSERT INTO ages (code, name) VALUES ('75', '75歳以上');
 -- 当事者テーブル
 INSERT INTO parties (code, name) VALUES ('00', '対象外当事者');
 INSERT INTO parties (code, name) VALUES ('01', '乗用車－大型車');
-INSERT INTO parties (code, name) VALUES ('02', '乗用車－中型');
+INSERT INTO parties (code, name) VALUES ('02', '乗用車－中型車');
+INSERT INTO parties (code, name) VALUES ('03', '乗用車－普通車');
 INSERT INTO parties (code, name) VALUES ('04', '乗用車－軽自動車');
 INSERT INTO parties (code, name) VALUES ('05', '乗用車－ミニカー');
 INSERT INTO parties (code, name) VALUES ('07', '乗用車－準中型車');
@@ -3351,11 +3357,11 @@ INSERT INTO parties (code, name) VALUES ('21', '特殊車－大型－農耕作�
 INSERT INTO parties (code, name) VALUES ('22', '特殊車－大型－その他');
 INSERT INTO parties (code, name) VALUES ('23', '特殊車－小型－農耕作業用');
 INSERT INTO parties (code, name) VALUES ('24', '特殊車－小型－その他');
-INSERT INTO parties (code, name) VALUES ('31', '二輪車－自動二輪－小型二輪－751cc以上');
-INSERT INTO parties (code, name) VALUES ('32', '二輪車－自動二輪－小型二輪－401～750cc');
-INSERT INTO parties (code, name) VALUES ('33', '二輪車－自動二輪－小型二輪－251～400cc');
-INSERT INTO parties (code, name) VALUES ('34', '二輪車－自動二輪－軽二輪－126～250cc');
-INSERT INTO parties (code, name) VALUES ('35', '二輪車－自動二輪－原付二種－51～125cc');
+INSERT INTO parties (code, name) VALUES ('31', '二輪車ー自動二輪ー小型二輪ー751cc以上');
+INSERT INTO parties (code, name) VALUES ('32', '二輪車ー自動二輪ー小型二輪ー401～750cc');
+INSERT INTO parties (code, name) VALUES ('33', '二輪車ー自動二輪ー小型二輪ー251～400cc');
+INSERT INTO parties (code, name) VALUES ('34', '二輪車ー自動二輪ー軽二輪ー126～250cc');
+INSERT INTO parties (code, name) VALUES ('35', '二輪車ー自動二輪ー原付二種ー51～125cc');
 INSERT INTO parties (code, name) VALUES ('36', '二輪車－原付自転車');
 INSERT INTO parties (code, name) VALUES ('41', '路面電車');
 INSERT INTO parties (code, name) VALUES ('42', '列車');
@@ -3363,8 +3369,8 @@ INSERT INTO parties (code, name) VALUES ('51', '軽車両－自転車');
 INSERT INTO parties (code, name) VALUES ('52', '軽車両－駆動補助機付自転車');
 INSERT INTO parties (code, name) VALUES ('59', '軽車両－その他');
 INSERT INTO parties (code, name) VALUES ('61', '歩行者');
-INSERT INTO parties (code, name) VALUES ('71', '歩行者以外の道路上の人');
-INSERT INTO parties (code, name) VALUES ('72', '道路外の人');
+INSERT INTO parties (code, name) VALUES ('71', '歩行者以外の道路上の人（補充票のみ）');
+INSERT INTO parties (code, name) VALUES ('72', '道路外の人（補充票のみ）');
 INSERT INTO parties (code, name) VALUES ('75', '物件等');
 INSERT INTO parties (code, name) VALUES ('76', '相手なし');
 
@@ -3403,6 +3409,7 @@ INSERT INTO speed_regulations (code, name) VALUES ('08', '100㎞/h以下');
 INSERT INTO speed_regulations (code, name) VALUES ('11', '120㎞/h以下');
 INSERT INTO speed_regulations (code, name) VALUES ('10', '指定の速度規制なし等');
 INSERT INTO speed_regulations (code, name) VALUES ('12', '120㎞/h超過');
+INSERT INTO speed_regulations (code, name) VALUES ('40', '（コード表に記載なし）');
 
 -- 車両の損傷程度テーブル
 INSERT INTO vehicle_damages (code, name) VALUES ('0', '対象外当事者');
@@ -3437,11 +3444,13 @@ INSERT INTO weeks (code, name) VALUES ('6', '金');
 INSERT INTO weeks (code, name) VALUES ('7', '土');
 
 -- 祝日テーブル
+INSERT INTO holidays (code, name) VALUES ('0', '（コード表に記載なし）');
 INSERT INTO holidays (code, name) VALUES ('1', '当日');
 INSERT INTO holidays (code, name) VALUES ('2', '前日');
 INSERT INTO holidays (code, name) VALUES ('3', 'その他');
 
 -- 運転練習の方法テーブル
+INSERT INTO driving_practices (code, name) VALUES ('0', '（コード表に記載なし）');
 INSERT INTO driving_practices (code, name) VALUES ('1', '一般（指定自動車教習所）');
 INSERT INTO driving_practices (code, name) VALUES ('2', '一般（届出自動車教習所）');
 INSERT INTO driving_practices (code, name) VALUES ('3', '一般（その他の自動車教習所）');

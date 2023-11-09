@@ -1,0 +1,3 @@
+web_app:
+  accident_zoom_level: 10
+  accident_buffer_ratio: 0.075
