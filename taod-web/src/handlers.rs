@@ -10,8 +10,8 @@ use sqlx::PgPool;
 
 use geometries::WkbGeometryF64;
 
-use crate::map::SRID_JGD2001;
 use crate::map::{tile_bbox, TileCoordinate};
+use crate::map::{BBox, SRID_JGD2001};
 use crate::models::Accident;
 use crate::settings::Settings;
 
@@ -103,21 +103,11 @@ pub async fn accident_list(
     pool: web::Data<PgPool>,
     tile_coordinate: web::Path<TileCoordinate>,
 ) -> actix_web::Result<HttpResponse> {
-    // ズームレベルを確認
-    if tile_coordinate.z < settings.web_app.accident_zoom_level {
-        return Err(AppErrorResponse::BadRequest(AppErrorContent {
-            app_error: Some(AppError::AccidentZoomLevel),
-            message: format!(
-                "交通事故はズームレベル{}以上から取得できます。",
-                settings.web_app.accident_zoom_level
-            )
-            .into(),
-        })
-        .into());
-    }
-    // タイル内の交通事故を取得
-    let bbox = tile_bbox(tile_coordinate.into_inner());
-    let bbox = bbox.extend(settings.web_app.accident_buffer_ratio);
+    let bbox = calculate_extend_accident_bbox(
+        tile_coordinate.into_inner(),
+        settings.web_app.accident_zoom_level,
+        settings.web_app.accident_buffer_ratio,
+    )?;
     let accidents = sqlx::query_as!(
         Accident,
         r#"
@@ -201,9 +191,31 @@ pub async fn accident_list(
     Ok(response)
 }
 
+fn calculate_extend_accident_bbox(
+    tile_coordinate: TileCoordinate,
+    accident_zoom_level: u8,
+    accident_buffer_ratio: f64,
+) -> Result<BBox, AppErrorResponse> {
+    // ズームレベルを確認
+    if tile_coordinate.z < accident_zoom_level {
+        return Err(AppErrorResponse::BadRequest(AppErrorContent {
+            app_error: Some(AppError::AccidentZoomLevel),
+            message: format!(
+                "交通事故はズームレベル{}以上から取得できます。",
+                accident_zoom_level
+            )
+            .into(),
+        }));
+    }
+    // タイルのバウンディングボックスを計算
+    let bbox = tile_bbox(tile_coordinate);
+
+    // バウンディングボックスを拡張
+    Ok(bbox.extend(accident_buffer_ratio))
+}
+
 fn accident_properties(accident: &Accident) -> geojson::JsonObject {
     let mut props = geojson::JsonObject::new();
-    props.insert("id".to_string(), SerdeString(accident.id.to_string()));
     props.insert(
         "prefectureCode".to_string(),
         SerdeString(accident.prefecture_code.to_string()),
