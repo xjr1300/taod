@@ -8,6 +8,8 @@ use serde_json::to_string_pretty;
 use serde_json::value::Value::{Number as SerdeNumber, String as SerdeString};
 use sqlx::PgPool;
 
+use geometries::WkbGeometryF64;
+
 use crate::map::SRID_JGD2001;
 use crate::map::{tile_bbox, TileCoordinate};
 use crate::models::Accident;
@@ -134,7 +136,7 @@ pub async fn accident_list(
             we.name weather_name,
             a.surface_condition_code,
             su.name surface_condition_name,
-            a.location as "location!: _"
+            a.location as "location!: WkbGeometryF64"
         FROM accidents a
         INNER JOIN prefectures pr ON a.prefecture_code = pr.code
         INNER JOIN police_stations po ON a.prefecture_code = po.prefecture_code
