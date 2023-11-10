@@ -4,11 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+actix-http = "3.4.0"
 actix-web = { version = "4.4.*", features = ["macros"] }
 anyhow = "1.0.*"
 config = "0.13.*"
 db = { path = "../db" }
 dotenvy = "0.15.7"
+futures = "0.3.29"
 geo-types = { version = "0.7.*" }
 geojson = { version = "0.24.*", features = ["geo-types"] }
 geometries = { path = "../geometries" }
