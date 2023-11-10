@@ -4,7 +4,7 @@ use actix_web::{web, App, HttpServer};
 
 use db::connection_pool;
 use taod_web::{
-    handlers::{accident_list, health_check},
+    handlers::{accident_list, accident_list_geojson, health_check},
     settings::get_settings,
 };
 
@@ -25,7 +25,11 @@ async fn main() -> anyhow::Result<()> {
             .service(
                 web::scope("/api")
                     .route("/health-check", web::get().to(health_check))
-                    .route("/accidents/{z}/{x}/{y}", web::get().to(accident_list)),
+                    .route("/accidents/{z}/{x}/{y}", web::get().to(accident_list))
+                    .route(
+                        "/accidents-geojson/{z}/{x}/{y}",
+                        web::get().to(accident_list_geojson),
+                    ),
             )
     })
     .listen(listener)?
