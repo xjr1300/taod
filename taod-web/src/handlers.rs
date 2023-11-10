@@ -10,8 +10,8 @@ use sqlx::PgPool;
 
 use geometries::WkbGeometryF64;
 
-use crate::map::SRID_JGD2001;
 use crate::map::{tile_bbox, TileCoordinate};
+use crate::map::{BBox, SRID_JGD2001};
 use crate::models::Accident;
 use crate::settings::Settings;
 
@@ -103,21 +103,11 @@ pub async fn accident_list(
     pool: web::Data<PgPool>,
     tile_coordinate: web::Path<TileCoordinate>,
 ) -> actix_web::Result<HttpResponse> {
-    // ズームレベルを確認
-    if tile_coordinate.z < settings.web_app.accident_zoom_level {
-        return Err(AppErrorResponse::BadRequest(AppErrorContent {
-            app_error: Some(AppError::AccidentZoomLevel),
-            message: format!(
-                "交通事故はズームレベル{}以上から取得できます。",
-                settings.web_app.accident_zoom_level
-            )
-            .into(),
-        })
-        .into());
-    }
-    // タイル内の交通事故を取得
-    let bbox = tile_bbox(tile_coordinate.into_inner());
-    let bbox = bbox.extend(settings.web_app.accident_buffer_ratio);
+    let bbox = calculate_extend_accident_bbox(
+        tile_coordinate.into_inner(),
+        settings.web_app.accident_zoom_level,
+        settings.web_app.accident_buffer_ratio,
+    )?;
     let accidents = sqlx::query_as!(
         Accident,
         r#"
@@ -201,9 +191,134 @@ pub async fn accident_list(
     Ok(response)
 }
 
+/// 交通事故リストハンドラ
+///
+/// PostGISから直接GeoJSONを取得する。
+pub async fn accident_list_geojson(
+    settings: web::Data<Settings>,
+    pool: web::Data<PgPool>,
+    tile_coordinate: web::Path<TileCoordinate>,
+) -> actix_web::Result<HttpResponse> {
+    let bbox = calculate_extend_accident_bbox(
+        tile_coordinate.into_inner(),
+        settings.web_app.accident_zoom_level,
+        settings.web_app.accident_buffer_ratio,
+    )?;
+
+    let record = sqlx::query!(
+        r#"
+        SELECT json_build_object(
+            'type', 'FeatureCollection',
+            'features', json_agg(
+                json_build_object(
+                    'type', 'Feature',
+                    'id', id,
+                    'geometry', ST_AsGeoJSON(location, 9, 0)::json,
+                    'properties', json_build_object(
+                        'prefectureCode', prefecture_code,
+                        'prefectureName', prefecture_name,
+                        'cityCode', city_code,
+                        'cityName', city_name,
+                        'policeStationCode', police_station_code,
+                        'policeStationName', police_station_name,
+                        'occurredAt', occurred_at,
+                        'numberOfDeaths', number_of_deaths,
+                        'numberOfInjuries', number_of_injuries,
+                        'weatherCode', weather_code,
+                        'weatherName', weather_name,
+                        'surfaceConditionCode', surface_condition_code,
+                        'surfaceConditionName', surface_condition_name
+                    )
+                )
+            )
+        ) as "features!: sqlx::types::Json<serde_json::Value>"
+        FROM (
+            SELECT
+                a.id,
+                ci.prefecture_jis_code prefecture_code,
+                pr.name prefecture_name,
+                CONCAT(a.prefecture_code, a.police_station_code) police_station_code,
+                po.police_station_name,
+                a.city_jis_code city_code,
+                ci.city_name,
+                a.occurred_at,
+                a.number_of_deaths,
+                a.number_of_injuries,
+                a.weather_code,
+                we.name weather_name,
+                a.surface_condition_code,
+                su.name surface_condition_name,
+                a.location
+            FROM accidents a
+            INNER JOIN prefectures pr ON a.prefecture_code = pr.code
+            INNER JOIN police_stations po ON a.prefecture_code = po.prefecture_code
+                AND a.police_station_code = po.police_station_code
+            INNER JOIN cities ci ON a.city_jis_code = ci.city_jis_code
+            INNER JOIN weathers we ON a.weather_code = we.code
+            INNER JOIN surface_conditions su ON a.surface_condition_code = su.code
+            WHERE
+                ST_CONTAINS(
+                    ST_MakeEnvelope(
+                        $1,
+                        $2,
+                        $3,
+                        $4,
+                        $5
+                    ),
+                    a.location
+                )
+        )
+        "#,
+        bbox.x_min,
+        bbox.y_min,
+        bbox.x_max,
+        bbox.y_max,
+        SRID_JGD2001 as i32,
+    )
+    .fetch_one(pool.as_ref())
+    .await
+    .map_err(|e| {
+        AppErrorResponse::InternalServerError(AppErrorContent {
+            app_error: Some(AppError::Database),
+            message: e.to_string().into(),
+        })
+    })?;
+
+    match record.features.get("features") {
+        Some(serde_json::Value::Array(_)) => Ok(HttpResponseBuilder::new(StatusCode::OK)
+            .content_type(ContentType::json())
+            .body(record.features.to_string())),
+        _ => Ok(HttpResponseBuilder::new(StatusCode::OK)
+            .content_type(ContentType::json())
+            .body(r#"{"features": [], "type": "FeatureCollection"}"#)),
+    }
+}
+
+fn calculate_extend_accident_bbox(
+    tile_coordinate: TileCoordinate,
+    accident_zoom_level: u8,
+    accident_buffer_ratio: f64,
+) -> Result<BBox, AppErrorResponse> {
+    // ズームレベルを確認
+    if tile_coordinate.z < accident_zoom_level {
+        return Err(AppErrorResponse::BadRequest(AppErrorContent {
+            app_error: Some(AppError::AccidentZoomLevel),
+            message: format!(
+                "交通事故はズームレベル{}以上から取得できます。",
+                accident_zoom_level
+            )
+            .into(),
+        }));
+    }
+    // タイルのバウンディングボックスを計算
+    let bbox = tile_bbox(tile_coordinate);
+
+    // バウンディングボックスを拡張
+    Ok(bbox.extend(accident_buffer_ratio))
+}
+
 fn accident_properties(accident: &Accident) -> geojson::JsonObject {
     let mut props = geojson::JsonObject::new();
-    props.insert("id".to_string(), SerdeString(accident.id.to_string()));
     props.insert(
         "prefectureCode".to_string(),
         SerdeString(accident.prefecture_code.to_string()),
