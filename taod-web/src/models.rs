@@ -1,5 +1,4 @@
-use geometries::GeometryF64;
-use geozero::wkb;
+use geometries::WkbGeometryF64;
 use time::OffsetDateTime;
 use uuid::Uuid;
 
@@ -35,5 +34,5 @@ pub struct Accident {
     /// 路面状態名
     pub surface_condition_name: String,
     /// 発生箇所
-    pub location: wkb::Decode<GeometryF64>,
+    pub location: WkbGeometryF64,
 }

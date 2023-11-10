@@ -669,8 +669,6 @@ name = "db"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "geo-types",
- "geozero",
  "sqlx",
 ]
 
@@ -942,6 +940,7 @@ name = "geometries"
 version = "0.1.0"
 dependencies = [
  "geo-types",
+ "geozero",
 ]
 
 [[package]]
