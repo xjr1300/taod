@@ -1,7 +1,11 @@
 use std::borrow::Cow;
 use std::fmt::{Debug, Display};
 
-use actix_web::http::{header::ContentType, StatusCode};
+use actix_web::body::MessageBody;
+use actix_web::dev::ServiceResponse;
+use actix_web::http::header::{self, ContentType};
+use actix_web::http::StatusCode;
+use actix_web::middleware::ErrorHandlerResponse;
 use actix_web::{web, HttpResponse, HttpResponseBuilder, Responder, ResponseError};
 use geojson::{FeatureCollection, GeoJson};
 use serde_json::to_string_pretty;
@@ -53,7 +57,7 @@ impl ResponseError for AppErrorResponse {
 #[derive(Debug, serde::Serialize)]
 pub struct AppErrorContent {
     /// アプリケーションエラー
-    pub app_error: Option<AppError>,
+    pub app_error: AppError,
     /// エラーメッセージ
     pub message: Cow<'static, str>,
 }
@@ -74,18 +78,26 @@ pub enum AppError {
 #[serde(rename_all = "camelCase")]
 pub struct AppResponseErrorBody {
     /// レスポンスステータスコード
-    pub status_code: u16,
+    #[serde(serialize_with = "serialize_status_code")]
+    pub status_code: StatusCode,
     /// アプリケーションエラー
     #[serde(rename(serialize = "appErrorCode"))]
-    pub app_error: Option<AppError>,
+    pub app_error: AppError,
     /// エラーメッセージ
     pub message: String,
+}
+
+fn serialize_status_code<S: serde::Serializer>(
+    status_code: &StatusCode,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    serializer.serialize_u16(status_code.as_u16())
 }
 
 impl AppResponseErrorBody {
     fn new(status_code: StatusCode, content: &AppErrorContent) -> Self {
         Self {
-            status_code: status_code.as_u16(),
+            status_code,
             app_error: content.app_error,
             message: content.message.to_string(),
         }
@@ -156,7 +168,7 @@ pub async fn accident_list(
     .await
     .map_err(|e| {
         AppErrorResponse::InternalServerError(AppErrorContent {
-            app_error: Some(AppError::Database),
+            app_error: AppError::Database,
             message: e.to_string().into(),
         })
     })?;
@@ -279,7 +291,7 @@ pub async fn accident_list_geojson(
     .await
     .map_err(|e| {
         AppErrorResponse::InternalServerError(AppErrorContent {
-            app_error: Some(AppError::Database),
+            app_error: AppError::Database,
             message: e.to_string().into(),
         })
     })?;
@@ -302,7 +314,7 @@ fn calculate_extend_accident_bbox(
     // ズームレベルを確認
     if tile_coordinate.z < accident_zoom_level {
         return Err(AppErrorResponse::BadRequest(AppErrorContent {
-            app_error: Some(AppError::AccidentZoomLevel),
+            app_error: AppError::AccidentZoomLevel,
             message: format!(
                 "交通事故はズームレベル{}以上から取得できます。",
                 accident_zoom_level
@@ -378,4 +390,46 @@ fn accident_properties(accident: &Accident) -> geojson::JsonObject {
     );
 
     props
+}
+
+/// actix-webがエクストラクタで発生したエラーなどをJSONに変換するミドルウェア
+pub fn default_error_handler<B>(
+    mut service_response: ServiceResponse<B>,
+) -> actix_web::Result<ErrorHandlerResponse<B>>
+where
+    B: actix_web::body::MessageBody,
+    <B as MessageBody>::Error: std::fmt::Debug,
+{
+    // Content-Typeがapplication/jsonの場合はそのまま返す
+    let content_type = service_response.headers().get(header::CONTENT_TYPE);
+    if content_type.is_some() && content_type.unwrap() == "application/json" {
+        return Ok(ErrorHandlerResponse::Response(
+            service_response.map_into_left_body(),
+        ));
+    }
+
+    // レスポンスヘッダーにContent-Typeを追加して、リクエストとレスポンスに分離
+    service_response.response_mut().headers_mut().insert(
+        header::CONTENT_TYPE,
+        header::HeaderValue::from_static("application/json"),
+    );
+    let status_code = service_response.response().status();
+    let (request, response) = service_response.into_parts();
+    // actix-webが返すエラーレスポンスのボディは短いため同期処理
+    let body_bytes =
+        futures::executor::block_on(actix_http::body::to_bytes(response.into_body())).unwrap();
+    // ボディを文字列に変換
+    let body = std::str::from_utf8(&body_bytes).unwrap_or("Something wrong with me");
+    // レスポンスを作成
+    let body = AppResponseErrorBody {
+        status_code,
+        app_error: AppError::None,
+        message: body.to_string(),
+    };
+    let response = HttpResponse::build(status_code).body(serde_json::to_string(&body).unwrap());
+    let response = ServiceResponse::new(request, response)
+        .map_into_boxed_body()
+        .map_into_right_body();
+
+    Ok(ErrorHandlerResponse::Response(response))
 }
