@@ -1,12 +1,13 @@
 use std::net::TcpListener;
 
-use actix_web::{middleware::ErrorHandlers, web, App, HttpServer};
+use actix_web::middleware::ErrorHandlers;
+use actix_web::{web, App, HttpServer};
 
 use db::connection_pool;
-use taod_web::{
-    handlers::{accident_list, accident_list_geojson, default_error_handler, health_check},
-    settings::get_settings,
-};
+
+use taod_web::handlers::{accident_list, accident_list_geojson, health_check};
+use taod_web::middleware::default_error_handler;
+use taod_web::settings::get_settings;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
